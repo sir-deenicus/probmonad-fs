@@ -28,6 +28,8 @@ let bernoulli (p:float) = ProbBase.Bernoulli p
 
 let normal mean variance = ProbBase.Normal(mean,variance)
 
+let mvnormal m v = ProbBase.MultiVariateNormal(m,v)
+
 let lognormal mean variance = ProbBase.LogNormal(mean,variance)
 
 let lognormal_mu mu sigma = ProbBase.LogNormalMu(mu,sigma)
@@ -36,11 +38,9 @@ let gamma shape rate = ProbBase.Gamma(shape,rate)
 
 let bernoulliOpts a b (p:float) = ProbBase.Bernoulli(p,a,b)
 
-let pdf (d:Dist<float>) (x:float) = ProbBase.Pdf(d,x)
+let pdf (d:Dist<float>) (x:float) = ProbBase.Pdf(d,x)  
 
-let pdf2 (d:PrimitiveDist<float>) (x:float) = ProbBase.Pdf(d,x)
-
-let pdf3 (d:PrimitiveDist<float[]>) (x:float[]) = ProbBase.Pdf(d,x)
+let pdf2 (d:Dist<float[]>) (x:float[]) = ProbBase.Pdf(d,x)
 
 let pmf d x = ProbBase.Pmf(d,x)
 
@@ -61,7 +61,14 @@ let roundAndGroupSamples r samples =
      |> Array.normalizeWeights  
      
 
-     
+let roundAndGroupSamplesWith f  samples =
+     samples 
+     |> Seq.toArray 
+     |> Array.map f
+     |> Array.groupBy id 
+     |> Array.map (keepLeft (Array.length >> float))
+     |> Array.normalizeWeights  
+         
 let evpair a = a |> Array.fold (fun ev (c,p) -> p * c + ev) 0.
 
 let calcEV choices prob =
@@ -99,7 +106,9 @@ type FDistBuilder() =
     member __.Return (x:FiniteDist<_>) = x// new FiniteDist<_>(Samples([x]));
 
     member __.ReturnFrom x = new FiniteDist<_>(Samples([ItemProb(x, prob 1.)]))
-    
+
+    member __.Zero () = new FiniteDist<_>(Samples([]))
+ 
     member __.Join items f = 
        let hd = Seq.head items
        let rest = Seq.tail items
@@ -123,3 +132,11 @@ let rec computePosterior likelihood ps (p:Dist<_>) = function
         
         computePosterior likelihood (p'::ps) p' xs
 
+
+let rec computePosterior2 samplenum likelihood ps (p:Dist<_>) = function 
+     | [] -> ps 
+     | x::xs -> 
+        let p' = p.Condition(fun theta -> likelihood theta x)
+        let p'' = Importance.ImportanceDist(samplenum, p')
+        
+        computePosterior2 samplenum likelihood (p''::ps) p'' xs
