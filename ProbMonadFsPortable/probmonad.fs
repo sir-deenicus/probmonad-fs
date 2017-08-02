@@ -53,6 +53,9 @@ let observe (f:'a -> Prob) dist =  ProbBase.Condition(f , dist)
 
 ///////////////////
 
+module Array =
+  let groupBy f sq = Seq.groupBy f sq |> Seq.groupByResultToArrays
+
 let roundAndGroupSamples r samples =
      samples 
      |> Seq.toArray 
@@ -105,7 +108,7 @@ type FDistBuilder() =
  
     member __.Join items f = 
        let hd = Seq.head items
-       let rest = Seq.tail items
+       let rest = Seq.skip 1 items
        rest |> Seq.fold (fun s v -> f s (__.Bind(v, __.ReturnFrom))) hd
 
 /////////////////////
@@ -137,8 +140,7 @@ let compactSamples nSamples =
     |> Seq.toArray
     
 
-let computeSamples nIters nPoints nSamples data = 
-    let updaterate = max 1 (nIters / 10)
+let computeSamples nIters nPoints nSamples data =   
     let mutable nelements = 0
 
     [|for i in 0..nIters do                          
@@ -147,11 +149,8 @@ let computeSamples nIters nPoints nSamples data =
           let dat = Seq.take nSamples samples |> Seq.toArray |> compactSamples
         
           let els = Array.countElements dat
-          nelements <- nelements + els.Count
-        
-          if i % updaterate = 0 then 
-              printfn "%d of %d" i nIters
-              printfn "%d elements" nelements       
+          nelements <- nelements + els.Count    
+
           yield (els)|]
 
     |> Array.fold (fun fm m -> Map.merge (+) id m fm) Map.empty 
