@@ -188,3 +188,59 @@ let filterWith f data =
   (Array.length matches |> float) / (float data.Length) 
 
 let inline computeDistrAverage f d = Array.sumBy (fun (x,p) -> f x * p) d
+
+
+let smoothDistr alpha data = 
+    data |> Array.fold (fun (p_prior,ps) (x,p) -> 
+                  let p' = exponentialSmoothing id alpha p_prior p
+                  p', (x,p')::ps) (snd data.[0],[])
+         |> snd
+         |> List.toArray
+         |> Array.normalizeWeights
+
+let compactFiniteSamples (d:FiniteDist<_>) = 
+    d.Explicit.Weights 
+    |> mapFilter prob2pair (snd >> (<>) 0.) 
+    |> Seq.toArray 
+
+
+
+let rec getLargeProbItems items cumulativeprob = function
+        | [] -> items
+        | _ when cumulativeprob > 0.5 -> items
+        | ((_,p) as item::ps) -> getLargeProbItems (item::items) (p + cumulativeprob) ps
+
+let findTopItem (vc:_[]) =
+    let topindex,_ = vc |> Array.mapi (fun i x -> i,x) 
+                        |> Array.maxBy (snd >> snd)
+    let (_,p) as topitem = vc.[topindex]
+    topindex, p , [topitem]
+    
+
+let getBulk (minp:float) items = 
+    let rec loopinner cmin cmax bulkMass sum =
+        if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
+
+        else  let bulkMass' = let frontpart = if cmin < 0 then bulkMass else items.[cmin]::bulkMass
+                              frontpart@(if cmax > items.Length - 1 then [] else [items.[cmax]])       
+              let currentSum = List.sumBy snd bulkMass'                   
+
+              loopinner (cmin-1) (cmax+1) bulkMass' currentSum 
+
+    let topindex,p,root = findTopItem items
+    loopinner (topindex-1) (topindex+1) root p
+
+let getBulkAlternating (minp:float) toggle items = 
+    let rec loopinner toggle cmin cmax bulkMass sum =
+        if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
+        else let cmin',cmax',bulkMass' = 
+                 match toggle with 
+                 | true -> cmin, cmax+1, if cmax > items.Length - 1 then bulkMass else bulkMass@[items.[cmax]] 
+                 | false -> cmin-1, cmax, if cmin >= 0 then items.[cmin]::bulkMass else bulkMass
+               
+             let currentSum = List.sumBy snd bulkMass'                   
+
+             loopinner (not toggle) cmin' cmax' bulkMass' currentSum  
+    
+    let topindex,p,root = findTopItem items
+    loopinner toggle (topindex-1) (topindex+1) root p

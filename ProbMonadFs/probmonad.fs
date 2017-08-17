@@ -166,17 +166,32 @@ let computeCredible f roundTo p1 p2 dat =
     
     let cump, _ = loop 0. [] (List.ofSeq dat |> List.sortBy f)
     
-    cump, List.maxBy third cump |> fst3, List.minBy third cump |> fst3
+    cump,  List.minBy third cump |> fst3, List.maxBy third cump |> fst3
 
 let smcSample nSamples nParticles (dist:Dist<_>) =
     let samples = dist.SmcMultiple(nSamples, nParticles).Sample()
+         
+    [|for sample in samples -> sample.Item , sample.Prob.Value|] 
+          |> Array.groupBy fst 
+          |> Array.map (fun (x,xs) -> x, Array.sumBy snd xs)            
+            
 
-    let wSamples = 
-        [|for sample in samples -> sample.Item , sample.Prob.Value|] 
-            |> Array.groupBy fst 
-            |> Array.map (fun (x,xs) -> x, Array.sumBy snd xs)            
+let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
+    let updaterate = max 1 (nIters / 10)
+    let mutable nelements = 0
 
-    wSamples, wSamples.Length
+    [|for i in 0..nIters do                                    
+          let samples = smcSample nSamples nParticles dist    
+          nelements <- nelements + samples.Length
+        
+          if i % updaterate = 0 then 
+              printfn "%d of %d" i nIters
+              printfn "%d elements" nelements       
+          yield (Map samples)|]
+
+    |> Array.fold (fun fm m -> Map.merge (fun x y -> x::y) (fun x ->[x]) m fm) Map.empty 
+    |> Map.map (fun _ l -> List.average l)
+    |> Map.toArray 
 
 let compactMapSamples f samples =
     Array.map (fun (x,p:float) -> f x,p) samples
@@ -189,3 +204,69 @@ let filterWith f data =
   (Array.length matches |> float) / (float data.Length) 
 
 let inline computeDistrAverage f d = Array.sumBy (fun (x,p) -> f x * p) d
+
+let smoothDistr alpha data = 
+    data |> Array.fold (fun (p_prior,ps) (x,p) -> 
+                  let p' = exponentialSmoothing id alpha p_prior p
+                  p', (x,p')::ps) (snd data.[0],[])
+         |> snd
+         |> List.toArray
+         |> Array.normalizeWeights
+
+let compactFiniteSamples (d:FiniteDist<_>) = 
+    d.Explicit.Weights 
+    |> mapFilter prob2pair (snd >> (<>) 0.) 
+    |> Seq.toArray  
+
+
+let getLargeProbItems maxp data =
+    let rec innerloop curritems cumulativeprob = function
+          | [] -> curritems
+          | _ when cumulativeprob > maxp -> curritems
+          | ((_,p) as item::ps) -> innerloop (item::curritems) (p + cumulativeprob) ps
+    innerloop [] 0. data
+
+let findTopItem (vc:_[]) =
+    let topindex,_ = vc |> Array.indexed 
+                        |> Array.maxBy (snd >> snd)
+    let (_,p) as topitem = vc.[topindex]
+    topindex, p , [topitem]
+    
+
+let getBulk (minp:float) items = 
+    let rec loopinner cmin cmax bulkMass sum =
+        if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
+
+        else  let bulkMass' = let frontpart = if cmin < 0 then bulkMass else items.[cmin]::bulkMass
+                              frontpart@(if cmax > items.Length - 1 then [] else [items.[cmax]])       
+              let currentSum = List.sumBy snd bulkMass'                   
+
+              loopinner (cmin-1) (cmax+1) bulkMass' currentSum 
+
+    let topindex,p,root = findTopItem items
+    loopinner (topindex-1) (topindex+1) root p
+
+let getBulkAlternating (minp:float) toggle items = 
+    let rec loopinner toggle cmin cmax bulkMass sum =
+        if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
+        else let cmin',cmax',bulkMass' = 
+                 match toggle with 
+                 | true -> cmin, cmax+1, if cmax > items.Length - 1 then bulkMass else bulkMass@[items.[cmax]] 
+                 | false -> cmin-1, cmax, if cmin >= 0 then items.[cmin]::bulkMass else bulkMass
+               
+             let currentSum = List.sumBy snd bulkMass'                   
+
+             loopinner (not toggle) cmin' cmax' bulkMass' currentSum  
+    
+    let topindex,p,root = findTopItem items
+    loopinner toggle (topindex-1) (topindex+1) root p
+
+
+
+let inline betaMean (a,b) = a / (a + b)  
+
+let inline dirichletMean (a:Map<_,_>) = let total = Map.sum a in Map.map (fun _ a_i -> a_i / total) a
+ 
+let updateBeta (a,b) t =  if t then (a + 1., b) else (a, b + 1.)
+
+let updateDirichlet (m:Map<_,_>) x = Map.add x (m.[x] + 1.) m

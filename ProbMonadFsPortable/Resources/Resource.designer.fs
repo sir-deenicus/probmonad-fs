@@ -23,10 +23,10 @@ namespace ProbMonadFsPortable
     #nowarn "51" // address-of operator can occur in the code
     #nowarn "1183" // unused 'this' reference
     
-    exception ReturnExceptionca527509348d4ec2ab5a5238766669f4 of obj
-    exception ReturnNoneExceptionca527509348d4ec2ab5a5238766669f4
+    exception ReturnExceptionf2c2c2508d544dbb86bb87e96f41ce44 of obj
+    exception ReturnNoneExceptionf2c2c2508d544dbb86bb87e96f41ce44
     [<AutoOpen>]
-    module FuncConvertFinalOverloadca527509348d4ec2ab5a5238766669f4 =
+    module FuncConvertFinalOverloadf2c2c2508d544dbb86bb87e96f41ce44 =
       // This extension member adds to the FuncConvert type and is the last resort member in the method overloading rules. 
       type global.Microsoft.FSharp.Core.FuncConvert with
           /// A utility function to convert function values from tupled to curried form

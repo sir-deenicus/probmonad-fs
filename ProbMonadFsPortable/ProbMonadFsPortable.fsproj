@@ -54,7 +54,7 @@
     <AndroidResource Include="Resources\values\Strings.xml" />
     <Compile Include="Properties\AssemblyInfo.fs" />
     <Content Include="packages.config" />
-    <Compile Include="probmonad.fs" />
+    <Compile Include="probmonad_port.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
