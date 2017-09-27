@@ -238,12 +238,12 @@ let getBulk (minp:float) items =
         if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
 
         else  let bulkMass' = let frontpart = if cmin < 0 then bulkMass else items.[cmin]::bulkMass
-                              frontpart@(if cmax > items.Length - 1 then [] else [items.[cmax]])       
+                              if cmax > items.Length - 1 then frontpart else items.[cmax]::frontpart
               let currentSum = List.sumBy snd bulkMass'                   
-
+              
               loopinner (cmin-1) (cmax+1) bulkMass' currentSum 
 
-    let topindex,p,root = findTopItem items
+    let topindex,p,root = findTopItem items      
     loopinner (topindex-1) (topindex+1) root p
 
 let getBulkAlternating (minp:float) toggle items = 
@@ -251,7 +251,7 @@ let getBulkAlternating (minp:float) toggle items =
         if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
         else let cmin',cmax',bulkMass' = 
                  match toggle with 
-                 | true -> cmin, cmax+1, if cmax > items.Length - 1 then bulkMass else bulkMass@[items.[cmax]] 
+                 | true -> cmin, cmax+1, if cmax > items.Length - 1 then bulkMass else items.[cmax]::bulkMass 
                  | false -> cmin-1, cmax, if cmin >= 0 then items.[cmin]::bulkMass else bulkMass
                
              let currentSum = List.sumBy snd bulkMass'                   
