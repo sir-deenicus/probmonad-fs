@@ -189,8 +189,7 @@ let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
               printfn "%d elements" nelements       
           yield (Map samples)|]
 
-    |> Array.fold (fun fm m -> Map.merge (fun x y -> x::y) (fun x ->[x]) m fm) Map.empty 
-    |> Map.map (fun _ l -> List.average l)
+    |> Array.fold (fun fm m -> Map.merge (+) id m fm) Map.empty 
     |> Map.toArray 
 
 let compactMapSamples f samples =
