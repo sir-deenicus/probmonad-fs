@@ -181,7 +181,7 @@ let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
     let mutable nelements = 0
 
     [|for i in 0..nIters do                                    
-          let samples = smcSample nSamples nParticles dist    
+          let samples = smcSample nSamples nParticles dist |> Array.filterMap (snd >> (<) 1e-10) (keepLeft ((*) (float nSamples)))    
           nelements <- nelements + samples.Length
         
           if i % updaterate = 0 then 
