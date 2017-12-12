@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ProbMonadFs", "ProbMonadFs\ProbMonadFs.fsproj", "{21AA4095-B758-48C7-90B6-E1E8C4712DDA}"
-EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ProbMonadFsPortable", "ProbMonadFsPortable\ProbMonadFsPortable.fsproj", "{E036F5C5-EEB8-41B4-A855-95984FC1666F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,12 +15,11 @@ Global
 		{21AA4095-B758-48C7-90B6-E1E8C4712DDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21AA4095-B758-48C7-90B6-E1E8C4712DDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21AA4095-B758-48C7-90B6-E1E8C4712DDA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E036F5C5-EEB8-41B4-A855-95984FC1666F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E036F5C5-EEB8-41B4-A855-95984FC1666F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E036F5C5-EEB8-41B4-A855-95984FC1666F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E036F5C5-EEB8-41B4-A855-95984FC1666F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {677ED156-90B2-44D5-8D86-C0D1C774A833}
 	EndGlobalSection
 EndGlobal

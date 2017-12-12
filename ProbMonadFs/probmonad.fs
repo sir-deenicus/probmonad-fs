@@ -35,6 +35,8 @@ let mvnormal m v = ProbBase.MultiVariateNormal(m,v)
 
 let lognormal mean variance = ProbBase.LogNormal(mean,variance)
 
+let poisson lambda = ProbBase.Poisson(lambda)
+
 let lognormal_mu mu sigma = ProbBase.LogNormalMu(mu,sigma)
 
 let gamma shape rate = ProbBase.Gamma(shape,rate)
@@ -45,30 +47,11 @@ let pdf  (d:Dist<float>) (x:float) = ProbBase.Pdf(d,x)
 
 let pdf2 (d:Dist<float[]>) (x:float[]) = ProbBase.Pdf(d,x)
 
-let pmf d x = ProbBase.Pmf(d,x)         
+let pmf (d:Dist<int>) x = ProbBase.Pmf(d,x)         
 
 let exactly p = ProbBase.Return(p)
 
 let observe (f:'a -> Prob) dist =  ProbBase.Condition(f , dist) 
-
-///////////////////
-
-let roundAndGroupSamples r samples =
-     samples 
-     |> Seq.toArray 
-     |> Array.map  (round r) 
-     |> Array.groupBy id 
-     |> Array.map (keepLeft (Array.length >> float))
-     |> Array.normalizeWeights  
-     
-
-let roundAndGroupSamplesWith f  samples =
-     samples 
-     |> Seq.toArray 
-     |> Array.map f
-     |> Array.groupBy id 
-     |> Array.map (keepLeft (Array.length >> float))
-     |> Array.normalizeWeights           
 
 //////////
 
@@ -115,13 +98,7 @@ let fdist = FDistBuilder()
 let dist = DistBuilder()
 
 let prob2pair (p:ItemProb<_>)= p.Item, p.Prob.Value
-
-let samplesToArray data = data |> Seq.toArray 
-                               |> Array.mapFilter prob2pair (fun (_,p) -> not(p = 0.|| Double.IsNaN p || Double.IsInfinity p)) 
-                               |> Array.normalizeWeights
- 
-let getImportanceSamples n (p:Dist<_>) = p.ImportanceSamples(n).Sample() |> samplesToArray |> Array.sortBy fst   
-
+                
 let rec computePosterior likelihood ps (p:Dist<_>) = function 
      | [] -> ps 
      | x::xs -> 
@@ -129,12 +106,128 @@ let rec computePosterior likelihood ps (p:Dist<_>) = function
         
         computePosterior likelihood (p'::ps) p' xs  
 
-///////////////////
+///////////////////    
+
+let samplesToArray data = data |> Seq.toArray 
+                               |> Array.mapFilter prob2pair (fun (_,p) -> not(p = 0.|| Double.IsNaN p || Double.IsInfinity p)) 
+                               |> Array.normalizeWeights
+ 
+let getImportanceSamples n (p:Dist<_>) = samplesToArray(p.ImportanceSamples(n).Sample())
+
+
+let roundAndGroupSamples r samples =
+     samples 
+     |> Seq.toArray 
+     |> Array.map  (round r) 
+     |> Array.groupBy id 
+     |> Array.map (keepLeft (Array.length >> float))
+     |> Array.normalizeWeights  
+     
+
+let roundAndGroupSamplesWith f  samples =
+     samples 
+     |> Seq.toArray 
+     |> Array.map f
+     |> Array.groupBy id 
+     |> Array.map (keepLeft (Array.length >> float))
+     |> Array.normalizeWeights           
+
 
 let compactSamples nSamples = 
     nSamples                                     
     |> Seq.concat 
     |> Seq.toArray
+
+let compactMapSamples f samples =
+    Array.map (fun (x,p:float) -> f x,p) samples
+    |> Array.groupBy fst 
+    |> Array.map (fun (x,xs) -> x, Array.sumBy snd xs) 
+    |> Array.normalizeWeights  
+
+
+let compactFiniteSamples (d:FiniteDist<_>) = 
+    d.Explicit.Weights 
+    |> mapFilter prob2pair (snd >> (<>) 0.) 
+    |> Seq.toArray  
+
+    
+let filterWith f data = 
+  let matches = data |> Array.filter f
+  (Array.length matches |> float) / (float data.Length) 
+
+///////////////////////////////////
+
+let smoothDistr alpha data = 
+    data |> Array.fold (fun (p_prior,ps) (x,p) -> 
+                  let p' = exponentialSmoothing id alpha p_prior p
+                  p', (x,p')::ps) (snd data.[0],[])
+         |> snd
+         |> List.toArray
+         |> Array.normalizeWeights
+
+///////////////////////
+
+
+let inline computeDistrAverage f d = Array.sumBy (fun (x,p) -> f x * p) d
+
+
+let computeCredible f roundTo p1 p2 dat =         
+    let rec loop cumulativeProb ps = function
+            | []  -> ps, cumulativeProb
+            | _ when cumulativeProb > p2 -> ps, cumulativeProb
+            | (x,p)::dat -> let ps' = if cumulativeProb + p < p1 then ps else ((x,p,round roundTo (p+cumulativeProb))::ps)
+                            loop (cumulativeProb+p) ps' dat
+    
+    let cump, _ = loop 0. [] (List.ofSeq dat |> List.sortBy f)
+    
+    cump,  List.minBy third cump |> fst3, List.maxBy third cump |> fst3
+
+
+let getLargeProbItems maxp data =
+    let rec innerloop curritems cumulativeprob = function
+          | [] -> curritems
+          | _ when cumulativeprob > maxp -> curritems
+          | ((_,p) as item::ps) -> innerloop (item::curritems) (p + cumulativeprob) ps
+    innerloop [] 0. data
+
+
+let findTopItem (vc:_[]) =
+    let topindex,_ = vc |> Array.indexed 
+                        |> Array.maxBy (snd >> snd)
+    let (_,p) as topitem = vc.[topindex]
+    topindex, p , [topitem]
+    
+
+let getBulk (minp:float) items = 
+    let rec loopinner cmin cmax bulkMass sum =
+        if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
+
+        else  let bulkMass' = let frontpart = if cmin < 0 then bulkMass else items.[cmin]::bulkMass
+                              if cmax > items.Length - 1 then frontpart else items.[cmax]::frontpart
+              let currentSum = List.sumBy snd bulkMass'                   
+              
+              loopinner (cmin-1) (cmax+1) bulkMass' currentSum 
+
+    let topindex,p,root = findTopItem items      
+    loopinner (topindex-1) (topindex+1) root p
+
+
+let getBulkAlternating (minp:float) toggle items = 
+    let rec loopinner toggle cmin cmax bulkMass sum =
+        if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
+        else let cmin',cmax',bulkMass' = 
+                 match toggle with 
+                 | true -> cmin, cmax+1, if cmax > items.Length - 1 then bulkMass else items.[cmax]::bulkMass 
+                 | false -> cmin-1, cmax, if cmin >= 0 then items.[cmin]::bulkMass else bulkMass
+               
+             let currentSum = List.sumBy snd bulkMass'                   
+
+             loopinner (not toggle) cmin' cmax' bulkMass' currentSum  
+    
+    let topindex,p,root = findTopItem items
+    loopinner toggle (topindex-1) (topindex+1) root p
+
+////////////////////////////////
     
 
 let computeSamples nIters nPoints nSamples data = 
@@ -157,16 +250,6 @@ let computeSamples nIters nPoints nSamples data =
     |> Array.fold (fun fm m -> Map.merge (+) id m fm) Map.empty 
     |> Map.toArray 
 
-let computeCredible f roundTo p1 p2 dat =         
-    let rec loop cumulativeProb ps = function
-            | []  -> ps, cumulativeProb
-            | _ when cumulativeProb > p2 -> ps, cumulativeProb
-            | (x,p)::dat -> let ps' = if cumulativeProb + p < p1 then ps else ((x,p,round roundTo (p+cumulativeProb))::ps)
-                            loop (cumulativeProb+p) ps' dat
-    
-    let cump, _ = loop 0. [] (List.ofSeq dat |> List.sortBy f)
-    
-    cump,  List.minBy third cump |> fst3, List.maxBy third cump |> fst3
 
 let smcSample nSamples nParticles (dist:Dist<_>) =
     let samples = dist.SmcMultiple(nSamples, nParticles).Sample()
@@ -192,74 +275,7 @@ let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
     |> Array.fold (fun fm m -> Map.merge (+) id m fm) Map.empty 
     |> Map.toArray 
 
-let compactMapSamples f samples =
-    Array.map (fun (x,p:float) -> f x,p) samples
-    |> Array.groupBy fst 
-    |> Array.map (fun (x,xs) -> x, Array.sumBy snd xs) 
-    |> Array.normalizeWeights  
-    
-let filterWith f data = 
-  let matches = data |> Array.filter f
-  (Array.length matches |> float) / (float data.Length) 
-
-let inline computeDistrAverage f d = Array.sumBy (fun (x,p) -> f x * p) d
-
-let smoothDistr alpha data = 
-    data |> Array.fold (fun (p_prior,ps) (x,p) -> 
-                  let p' = exponentialSmoothing id alpha p_prior p
-                  p', (x,p')::ps) (snd data.[0],[])
-         |> snd
-         |> List.toArray
-         |> Array.normalizeWeights
-
-let compactFiniteSamples (d:FiniteDist<_>) = 
-    d.Explicit.Weights 
-    |> mapFilter prob2pair (snd >> (<>) 0.) 
-    |> Seq.toArray  
-
-
-let getLargeProbItems maxp data =
-    let rec innerloop curritems cumulativeprob = function
-          | [] -> curritems
-          | _ when cumulativeprob > maxp -> curritems
-          | ((_,p) as item::ps) -> innerloop (item::curritems) (p + cumulativeprob) ps
-    innerloop [] 0. data
-
-let findTopItem (vc:_[]) =
-    let topindex,_ = vc |> Array.indexed 
-                        |> Array.maxBy (snd >> snd)
-    let (_,p) as topitem = vc.[topindex]
-    topindex, p , [topitem]
-    
-
-let getBulk (minp:float) items = 
-    let rec loopinner cmin cmax bulkMass sum =
-        if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
-
-        else  let bulkMass' = let frontpart = if cmin < 0 then bulkMass else items.[cmin]::bulkMass
-                              if cmax > items.Length - 1 then frontpart else items.[cmax]::frontpart
-              let currentSum = List.sumBy snd bulkMass'                   
-              
-              loopinner (cmin-1) (cmax+1) bulkMass' currentSum 
-
-    let topindex,p,root = findTopItem items      
-    loopinner (topindex-1) (topindex+1) root p
-
-let getBulkAlternating (minp:float) toggle items = 
-    let rec loopinner toggle cmin cmax bulkMass sum =
-        if sum > minp || (cmin < 0 && cmax >= Array.length items) then sum, bulkMass 
-        else let cmin',cmax',bulkMass' = 
-                 match toggle with 
-                 | true -> cmin, cmax+1, if cmax > items.Length - 1 then bulkMass else items.[cmax]::bulkMass 
-                 | false -> cmin-1, cmax, if cmin >= 0 then items.[cmin]::bulkMass else bulkMass
-               
-             let currentSum = List.sumBy snd bulkMass'                   
-
-             loopinner (not toggle) cmin' cmax' bulkMass' currentSum  
-    
-    let topindex,p,root = findTopItem items
-    loopinner toggle (topindex-1) (topindex+1) root p
-
+//////////////////////////////////
 
 
 let inline betaMean (a,b) = a / (a + b)  
