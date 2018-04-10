@@ -19,7 +19,7 @@ let bernoulliF = ProbBase.Prob >> ProbBase.BernoulliF
 
 let dirichlet d = ProbBase.Dirichlet(Seq.toArray d)
 
-let categorical ps items = ProbBase.Categorical(Samples(Seq.zip items ps |> Seq.map (keepLeft prob >> ItemProb)))
+let categorical ps items = ProbBase.Categorical(items,ps) //(Samples(Seq.zip items ps |> Seq.map (keepLeft prob >> ItemProb)))
 
 let categorical2 ps = ps |> Seq.toArray |> Array.map swap |> Array.unzip ||> categorical
 
@@ -48,6 +48,8 @@ let pdf  (d:Dist<float>) (x:float) = ProbBase.Pdf(d,x)
 let pdf2 (d:Dist<float[]>) (x:float[]) = ProbBase.Pdf(d,x)
 
 let pmf (d:Dist<int>) x = ProbBase.Pmf(d,x)         
+
+let pmf2 (d:Dist<'a>) x = ProbBase.Pmf(d,x)         
 
 let exactly p = ProbBase.Return(p)
 
@@ -85,11 +87,6 @@ type FDistBuilder() =
     member __.ReturnFrom x = new FiniteDist<_>(Samples([ItemProb(x, prob 1.)]))
 
     member __.Zero () = new FiniteDist<_>(Samples([]))
- 
-    member __.Join items f = 
-       let hd = Seq.head items
-       let rest = Seq.tail items
-       rest |> Seq.fold (fun s v -> f s (__.Bind(v, __.ReturnFrom))) hd
 
 /////////////////////
 
