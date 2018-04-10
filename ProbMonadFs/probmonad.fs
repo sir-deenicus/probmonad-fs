@@ -151,6 +151,23 @@ let compactFiniteSamples (d:FiniteDist<_>) =
 let filterWith f data = 
   let matches = data |> Array.filter f
   (Array.length matches |> float) / (float data.Length) 
+                       
+
+let filterWithCondition conditional f data = 
+  let sub = Array.filter conditional data
+  let matches = sub |> Array.filter f 
+  (Array.length matches |> float) / (float sub.Length) 
+
+
+let inline probabilityOf filter m = 
+    Array.sumBy snd (Array.filter (fun (k, _) -> filter k) m)
+
+
+let toBits x = x / log 2. 
+
+let inline log0 x = if x = 0. then 0. else log x
+
+let inline entropy dist = -Seq.sumBy (fun (_,p) -> p * log0 p) dist
 
 ///////////////////////////////////
 
