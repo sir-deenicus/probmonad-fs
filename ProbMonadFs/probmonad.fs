@@ -5,6 +5,7 @@ open Prelude.Common
 open System               
 open Prelude   
 open ProbCSharp
+open Prelude.Common
 
 ///////////
 let prob = ProbBase.Prob
@@ -163,6 +164,11 @@ let inline probabilityOf filter m =
     Array.sumBy snd (Array.filter (fun (k, _) -> filter k) m)
 
 
+let inline conditionalProbability conditional matchwith m = 
+    let sub = Array.filter (fun (k, _) -> conditional k) m
+    let matches = Array.filter (fun (k, _) -> matchwith k) sub
+    (Array.sumBy snd matches) / (Array.sumBy snd sub)
+
 let toBits x = x / log 2. 
 
 let inline log0 x = if x = 0. then 0. else log x
@@ -244,14 +250,14 @@ let getBulkAlternating (minp:float) toggle items =
 ////////////////////////////////
     
 
-let computeSamples nIters nPoints nSamples data = 
+let computeSamples nIters nPoints data = 
     let updaterate = max 1 (nIters / 10)
     let mutable nelements = 0
 
     [|for i in 0..nIters do                          
           let mh = MetropolisHastings.MHPrior(data, nPoints)        
-          let samples = mh.SampleN(nSamples);
-          let dat = Seq.take nSamples samples |> Seq.toArray |> compactSamples
+          let samples = mh.SampleN(nPoints);
+          let dat = Seq.takeOrMax nPoints samples |> Seq.toArray |> compactSamples
         
           let els = Array.countElements dat
           nelements <- nelements + els.Count
@@ -270,7 +276,7 @@ let smcSample nSamples nParticles (dist:Dist<_>) =
          
     [|for sample in samples -> sample.Item , sample.Prob.Value|] 
           |> Array.groupBy fst 
-          |> Array.map (fun (x,xs) -> x, Array.sumBy snd xs)            
+          |> Array.map (fun (x,xs) -> x, Array.averageBy snd xs)            
             
 
 let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
@@ -278,7 +284,7 @@ let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
     let mutable nelements = 0
 
     [|for i in 0..nIters do                                    
-          let samples = smcSample nSamples nParticles dist |> Array.filterMap (snd >> (<) 1e-10) (keepLeft ((*) (float nSamples)))    
+          let samples = smcSample nSamples nParticles dist |> Array.filter (snd >> (<) 1e-12)     
           nelements <- nelements + samples.Length
         
           if i % updaterate = 0 then 
@@ -286,7 +292,7 @@ let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
               printfn "%d elements" nelements       
           yield (Map samples)|]
 
-    |> Array.fold (fun fm m -> Map.merge (+) id m fm) Map.empty 
+    |> Array.fold (fun fm m -> Map.merge (fun p1 p2 -> 0.5 * (p1 + p2)) id m fm) Map.empty 
     |> Map.toArray 
 
 //////////////////////////////////
