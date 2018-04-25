@@ -276,7 +276,7 @@ let smcSample nSamples nParticles (dist:Dist<_>) =
          
     [|for sample in samples -> sample.Item , sample.Prob.Value|] 
           |> Array.groupBy fst 
-          |> Array.map (fun (x,xs) -> x, Array.averageBy snd xs)            
+          |> Array.map (fun (x,xs) -> x, Array.sumBy snd xs)            
             
 
 let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
@@ -292,7 +292,7 @@ let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
               printfn "%d elements" nelements       
           yield (Map samples)|]
 
-    |> Array.fold (fun fm m -> Map.merge (fun p1 p2 -> 0.5 * (p1 + p2)) id m fm) Map.empty 
+    |> Array.fold (fun fm m -> Map.merge (fun p1 p2 -> (p1 + p2)) id m fm) Map.empty 
     |> Map.toArray 
 
 //////////////////////////////////
