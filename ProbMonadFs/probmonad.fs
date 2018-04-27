@@ -18,6 +18,8 @@ let bernoulliF = ProbBase.Prob >> ProbBase.BernoulliF
 
 //******************
 
+let uniform (items) = ProbBase.Uniform items
+
 let dirichlet d = ProbBase.Dirichlet(Seq.toArray d)
 
 let categorical ps items = ProbBase.Categorical(items,ps) //(Samples(Seq.zip items ps |> Seq.map (keepLeft prob >> ItemProb)))
@@ -106,9 +108,10 @@ let rec computePosterior likelihood ps (p:Dist<_>) = function
 
 ///////////////////    
 
-let samplesToArray data = data |> Seq.toArray 
-                               |> Array.mapFilter prob2pair (fun (_,p) -> not(p = 0.|| Double.IsNaN p || Double.IsInfinity p)) 
-                               |> Array.normalizeWeights
+let samplesToArray data = 
+    data |> Seq.toArray 
+         |> Array.mapFilter prob2pair (fun (_,p) -> not(p = 0.|| Double.IsNaN p || Double.IsInfinity p)) 
+         |> Array.normalizeWeights
  
 let getImportanceSamples n (p:Dist<_>) = samplesToArray(p.ImportanceSamples(n).Sample())
 
@@ -148,6 +151,7 @@ let compactFiniteSamples (d:FiniteDist<_>) =
     |> mapFilter prob2pair (snd >> (<>) 0.) 
     |> Seq.toArray  
 
+//////////////////////////
     
 let filterWith f data = 
   let matches = data |> Array.filter f

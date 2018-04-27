@@ -55,6 +55,7 @@
     <Compile Include="probmonad.fs" />
     <None Include="Script.fsx" />
     <Content Include="packages.config" />
+    <Compile Include="MetropolisHastingsDiffEv.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MathNet.Numerics">
