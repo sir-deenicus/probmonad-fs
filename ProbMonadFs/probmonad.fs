@@ -40,6 +40,10 @@ let lognormal mean variance = ProbBase.LogNormal(mean,variance)
 
 let poisson lambda = ProbBase.Poisson(lambda)
 
+let uniformC = ProbBase.Uniform()
+
+let uniformContinuous low upper = ProbBase.Uniform(low, upper)
+
 let lognormal_mu mu sigma = ProbBase.LogNormalMu(mu,sigma)
 
 let gamma shape rate = ProbBase.Gamma(shape,rate)
@@ -57,6 +61,8 @@ let pmf2 (d:Dist<'a>) x = ProbBase.Pmf(d,x)
 let exactly p = ProbBase.Return(p)
 
 let observe (f:'a -> Prob) dist =  ProbBase.Condition(f , dist) 
+
+let constrain (f:'a -> Prob) dist =  ProbBase.Condition(f , dist) 
 
 //////////
 

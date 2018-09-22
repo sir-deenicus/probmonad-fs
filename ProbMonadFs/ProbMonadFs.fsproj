@@ -59,7 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MathNet.Numerics">
-      <HintPath>..\packages\MathNet.Numerics.3.19.0\lib\net40\MathNet.Numerics.dll</HintPath>
+      <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Debug\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core">
@@ -71,7 +71,7 @@
       <HintPath>C:\Users\sir.deenicus\Documents\Visual Studio 2012\Projects\prelude\prelude\bin\Release\prelude.dll</HintPath>
     </Reference>
     <Reference Include="ProbCSharp">
-      <HintPath>C:\Users\sir.deenicus\Documents\Visual Studio 2015\open\csharp-probability-monad-master\ProbabilityMonad\bin\Debug\ProbCSharp.dll</HintPath>
+      <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Debug\ProbCSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
