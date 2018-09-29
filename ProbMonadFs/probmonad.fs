@@ -1,4 +1,4 @@
-﻿module FSharp.Probmonad
+﻿module Probmonad
                
 open Prelude.Math
 open Prelude.Common
