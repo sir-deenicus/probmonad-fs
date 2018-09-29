@@ -53,13 +53,12 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="probmonad.fs" />
-    <None Include="Script.fsx" />
     <Content Include="packages.config" />
     <Compile Include="MetropolisHastingsDiffEv.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MathNet.Numerics">
-      <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Debug\MathNet.Numerics.dll</HintPath>
+      <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Release\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core">
@@ -71,7 +70,7 @@
       <HintPath>C:\Users\sir.deenicus\Documents\Visual Studio 2012\Projects\prelude\prelude\bin\Release\prelude.dll</HintPath>
     </Reference>
     <Reference Include="ProbCSharp">
-      <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Debug\ProbCSharp.dll</HintPath>
+      <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Release\ProbCSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
