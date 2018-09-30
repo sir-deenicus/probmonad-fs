@@ -1,4 +1,4 @@
-﻿module MetropalisHastings
+﻿module MetropolisHastings
 
 open Probmonad
 open ProbCSharp     
