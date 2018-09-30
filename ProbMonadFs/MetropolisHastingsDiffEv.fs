@@ -17,14 +17,13 @@ module SimpleMCMC =
                 let p = min 1. ((candidate:ItemProb<_>).Prob.Div(chainState.Prob).Value)
 
                 let! accept = Primitive( (bernoulliF p).ToSampleDist() )
-                return! (if accept then candidate else chainState)
+                return (if accept then candidate else chainState)
               }
           let next = nextDist.Sample();
                  
           loop (next::newChain) next (n-1)
             
       Pure(loop chain (List.head chain) n)
-
 
   let MHPrior (dist:'a Dist) n =
       let initial = [dist.WeightedPrior().Sample()]
@@ -38,7 +37,7 @@ module DiffEvolution =
         let p = min 1. ((candidate:ItemProb<_>).Prob.Div(chainState.Prob).Value)
 
         let! accept = Primitive( (bernoulliF p).ToSampleDist() )
-        return! (if accept then candidate else chainState)
+        return (if accept then candidate else chainState)
       }
 
   let inline adjust sim jitter temperature (next:ItemProb<_>) (next2:ItemProb<_>) (next3:ItemProb<_>) =

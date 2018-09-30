@@ -75,9 +75,9 @@ type DistBuilder() =
        
     member __.Delay(f) = f() 
 
-    member __.Return (x:Dist<_>) = x // new FiniteDist<_>(Samples([x]));
+    member __.ReturnFrom (x:Dist<_>) = x 
 
-    member __.ReturnFrom x = Pure<_> (x) :> Dist<_>
+    member __.Return x = Pure<_> (x) :> Dist<_>
 
 
 type FDistBuilder() =
