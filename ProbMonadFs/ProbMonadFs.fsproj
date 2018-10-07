@@ -55,8 +55,13 @@
     <Compile Include="probmonad.fs" />
     <Content Include="packages.config" />
     <Compile Include="MetropolisHastingsDiffEv.fs" />
+    <Compile Include="Hamiltonian-monte-carlo.fs" />
+    <None Include="simple-examples.fsx" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="DiffSharp">
+      <HintPath>..\..\..\Libs\DiffSharp\DiffSharp.dll</HintPath>
+    </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Release\MathNet.Numerics.dll</HintPath>
     </Reference>

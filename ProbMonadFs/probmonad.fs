@@ -1,4 +1,4 @@
-﻿module Probmonad
+﻿module Probmonad.Core
                
 open Prelude.Math
 open Prelude.Common
@@ -18,7 +18,11 @@ let bernoulliF = ProbBase.Prob >> ProbBase.BernoulliF
 
 //******************
 
-let uniform (items) = ProbBase.Uniform items
+let uniform (items) = ProbBase.Uniform items 
+
+let uniform_c = ProbBase.Uniform()
+
+let uniformContinuous low upper = ProbBase.Uniform(low, upper)
 
 let dirichlet d = ProbBase.Dirichlet(Seq.toArray d)
 
@@ -30,7 +34,9 @@ let bernoulli (p:float) = ProbBase.Bernoulli p
 
 let bernoulliOpts a b (p:float) = ProbBase.Bernoulli(p,a,b)
                                   
-let beta α β = ProbBase.Beta(α, β)
+let beta α β = ProbBase.Beta(α, β) 
+
+let wishart dof scale = ProbBase.Wishart(dof, scale)
 
 let normal mean variance = ProbBase.Normal(mean,variance)
 
@@ -38,15 +44,15 @@ let mvnormal m v = ProbBase.MultiVariateNormal(m,v)
 
 let lognormal mean variance = ProbBase.LogNormal(mean,variance)
 
-let poisson lambda = ProbBase.Poisson(lambda)
-
-let uniformC = ProbBase.Uniform()
-
-let uniformContinuous low upper = ProbBase.Uniform(low, upper)
-
 let lognormal_mu mu sigma = ProbBase.LogNormalMu(mu,sigma)
 
+let poisson λ = ProbBase.Poisson(λ) 
+
 let gamma shape rate = ProbBase.Gamma(shape,rate)
+
+let exponential λ = ProbBase.Exponential λ
+
+let studentT loc scale freedom = ProbBase.StudentT(loc,scale,freedom)
 
 //*******************
 

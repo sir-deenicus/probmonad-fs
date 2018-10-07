@@ -1,6 +1,6 @@
-﻿module MetropolisHastings
+﻿namespace Probmonad
 
-open Probmonad
+open Probmonad.Core
 open ProbCSharp     
 
 module SimpleMCMC =
