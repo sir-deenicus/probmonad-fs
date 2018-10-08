@@ -65,10 +65,7 @@ module Densities =
   let studentT loc scale deg (xv:DV) =
       let x = xv.[0]
       (D 1.f + D 1.f/deg * ((x - loc)/scale) ** 2.f) ** -((deg + 1.f) / 2.f)
-     
-       
-let update density data = 
-    Seq.fold (fun ps point -> ps + log (density point)) 0. data
+            
 
 ///Prior can be of the form where points is an array of parameters for each sampled from distr
 ///let prior (a,b) hmc =
@@ -81,6 +78,9 @@ let drawSamples n hdelta hsteps prior x0  =
       Some(parameters', parameters')) x0 
       |> Seq.take n 
       |> Seq.toArray 
+
+let update density data = 
+    Seq.fold (fun ps point -> ps + log (density point)) 0. data
 
 let conditionalUpdates pdf samples data =
     samples |> Array.map (fun (parameters) ->   
