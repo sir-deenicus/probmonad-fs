@@ -169,7 +169,7 @@ module Grouping =
 module SampleSummarize = 
   let smoothDistr alpha data = 
       data |> Array.fold (fun (p_prior,ps) (x,p) -> 
-                    let p' = exponentialSmoothing id alpha p_prior p
+                    let p' = Stats.exponentialSmoothing id alpha p_prior p
                     p', (x,p')::ps) (snd data.[0],[])
            |> snd
            |> List.toArray

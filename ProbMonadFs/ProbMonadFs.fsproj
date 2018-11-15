@@ -55,24 +55,18 @@
     <Compile Include="probmonad.fs" />
     <Content Include="packages.config" />
     <Compile Include="MetropolisHastingsDiffEv.fs" />
-    <Compile Include="Hamiltonian-monte-carlo.fs" />
     <None Include="simple-examples.fsx" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="DiffSharp">
-      <HintPath>..\..\..\Libs\DiffSharp\DiffSharp.dll</HintPath>
+    <Reference Include="FSharp.Core">
+      <HintPath>..\packages\FSharp.Core.4.5.2\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Release\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core">
-      <Name>FSharp.Core</Name>
-      <AssemblyName>FSharp.Core.dll</AssemblyName>
-      <HintPath>$(MSBuildProgramFiles32)\Reference Assemblies\Microsoft\FSharp\.NETFramework\v4.0\$(TargetFSharpCoreVersion)\FSharp.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="prelude">
-      <HintPath>C:\Users\sir.deenicus\Documents\Visual Studio 2012\Projects\prelude\prelude\bin\Release\prelude.dll</HintPath>
+    <Reference Include="Prelude">
+      <HintPath>..\packages\Prelude.1.0.5\lib\net45\Prelude.dll</HintPath>
     </Reference>
     <Reference Include="ProbCSharp">
       <HintPath>..\..\..\Open\csharp-probability-monad-master\ProbabilityMonad\bin\Release\ProbCSharp.dll</HintPath>
@@ -81,7 +75,8 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.ValueTuple">
-      <HintPath>..\packages\System.ValueTuple.4.3.1\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
