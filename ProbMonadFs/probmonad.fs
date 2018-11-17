@@ -235,7 +235,7 @@ module SampleSummarize =
 
 ////////////////////////////////
 module Sampling =     
-  let computeSamples nIters nPoints data = 
+  let computeSamplesMCMC nIters nPoints data = 
       let updaterate = max 1 (nIters / 10)
       let mutable nelements = 0
 
@@ -264,7 +264,7 @@ module Sampling =
             |> Array.map (fun (x,xs) -> x, Array.sumBy snd xs)            
             
 
-  let smcSamples nIters nSamples nParticles (dist:Dist<_>) =
+  let computeSamplesSMC nIters nSamples nParticles (dist:Dist<_>) =
       let updaterate = max 1 (nIters / 10)
       let mutable nelements = 0
 
