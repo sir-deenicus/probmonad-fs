@@ -32,7 +32,7 @@ let categorical2 ps = ps |> Seq.toArray |> Array.map swap |> Array.unzip ||> cat
 
 let bernoulli (p:float) = ProbBase.Bernoulli p
 
-let bernoulliOpts a b (p:float) = ProbBase.Bernoulli(p,a,b)
+let bernoulliOption a b (p:float) = ProbBase.Bernoulli(p,a,b)
                                   
 let beta α β = ProbBase.Beta(α, β) 
 
@@ -235,12 +235,12 @@ module SampleSummarize =
 
 ////////////////////////////////
 module Sampling =     
-  let computeSamplesMCMC nIters nPoints data = 
+  let computeSamplesMCMC nIters nPoints dist = 
       let updaterate = max 1 (nIters / 10)
       let mutable nelements = 0
 
       [|for i in 0..nIters do                          
-            let mh = MetropolisHastings.MHPrior(data, nPoints)        
+            let mh = MetropolisHastings.MHPrior(dist, nPoints)        
             let samples = mh.SampleN(nPoints);
             let dat = Seq.takeOrMax nPoints samples |> Seq.toArray |> Grouping.compactSamples
         
