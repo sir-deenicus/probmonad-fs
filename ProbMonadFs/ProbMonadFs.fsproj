@@ -54,7 +54,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="probmonad.fs" />
     <Content Include="packages.config" />
-    <Compile Include="MetropolisHastingsDiffEv.fs" />
+    <Compile Include="MetropolisHastings.fs" />
     <None Include="simple-examples.fsx" />
   </ItemGroup>
   <ItemGroup>
